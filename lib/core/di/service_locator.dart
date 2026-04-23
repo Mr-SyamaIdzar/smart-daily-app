@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 
 import '../../core/services/biometric_service.dart';
 import '../../data/datasources/local/db_helper.dart';
@@ -23,6 +24,15 @@ import '../../domain/usecases/notes/search_notes_usecase.dart';
 import '../../domain/usecases/notes/update_note_usecase.dart';
 import '../../features/notes/providers/notes_provider.dart';
 
+// Weather imports
+import '../../core/services/location_service.dart';
+import '../../data/datasources/remote/weather_remote_ds.dart';
+import '../../data/repositories/weather_repository_impl.dart';
+import '../../domain/repositories/weather_repository.dart';
+import '../../domain/usecases/weather/get_weather_by_city_usecase.dart';
+import '../../domain/usecases/weather/get_weather_by_location_usecase.dart';
+import '../../features/weather/providers/weather_provider.dart';
+
 /// Service locator menggunakan GetIt.
 /// Semua dependency diregistrasi di sini — satu titik kontrol untuk DI.
 ///
@@ -39,6 +49,10 @@ abstract class ServiceLocator {
     );
 
     sl.registerLazySingleton<BiometricService>(() => BiometricService());
+    sl.registerLazySingleton<LocationService>(() => LocationService());
+
+    // Registers http Client
+    sl.registerLazySingleton<http.Client>(() => http.Client());
 
     // === Data Sources ===
     sl.registerLazySingleton<DbHelper>(() => DbHelper.instance);
@@ -51,6 +65,10 @@ abstract class ServiceLocator {
       () => NotesLocalDataSourceImpl(sl<DbHelper>()),
     );
 
+    sl.registerLazySingleton<WeatherRemoteDataSource>(
+      () => WeatherRemoteDataSourceImpl(client: sl<http.Client>()),
+    );
+
     // === Repositories ===
     sl.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(
@@ -61,6 +79,10 @@ abstract class ServiceLocator {
 
     sl.registerLazySingleton<NotesRepository>(
       () => NotesRepositoryImpl(localDataSource: sl<NotesLocalDataSource>()),
+    );
+
+    sl.registerLazySingleton<WeatherRepository>(
+      () => WeatherRepositoryImpl(remoteDataSource: sl<WeatherRemoteDataSource>()),
     );
 
     // === Use Cases ===
@@ -79,6 +101,9 @@ abstract class ServiceLocator {
     sl.registerLazySingleton(() => AddNoteUseCase(sl<NotesRepository>()));
     sl.registerLazySingleton(() => UpdateNoteUseCase(sl<NotesRepository>()));
     sl.registerLazySingleton(() => DeleteNoteUseCase(sl<NotesRepository>()));
+
+    sl.registerLazySingleton(() => GetWeatherByCityUseCase(sl<WeatherRepository>()));
+    sl.registerLazySingleton(() => GetWeatherByLocationUseCase(sl<WeatherRepository>()));
 
     // === Providers ===
     sl.registerFactory(
@@ -105,5 +130,14 @@ abstract class ServiceLocator {
         deleteNoteUseCase: sl<DeleteNoteUseCase>(),
       ),
     );
+
+    sl.registerLazySingleton(
+      () => WeatherProvider(
+        getWeatherByLocationUseCase: sl<GetWeatherByLocationUseCase>(),
+        getWeatherByCityUseCase: sl<GetWeatherByCityUseCase>(),
+        locationService: sl<LocationService>(),
+      ),
+    );
   }
 }
+
