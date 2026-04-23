@@ -7,7 +7,9 @@ import '../auth/providers/auth_provider.dart';
 
 /// Halaman Home (Dashboard) Aplikasi
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final void Function(int index)? onNavigateTab;
+
+  const HomePage({super.key, this.onNavigateTab});
 
   @override
   Widget build(BuildContext context) {
@@ -64,13 +66,16 @@ class HomePage extends StatelessWidget {
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 26,
-          backgroundColor: AppColors.primaryLight.withOpacity(0.15),
-          child: const Icon(
-            Icons.person_rounded,
-            color: AppColors.primary,
-            size: 28,
+        GestureDetector(
+          onTap: () => onNavigateTab?.call(3), // Index 3 is Profile
+          child: CircleAvatar(
+            radius: 26,
+            backgroundColor: AppColors.primaryLight.withOpacity(0.15),
+            child: const Icon(
+              Icons.person_rounded,
+              color: AppColors.primary,
+              size: 28,
+            ),
           ),
         ),
       ],
@@ -170,9 +175,7 @@ class HomePage extends StatelessWidget {
                 subtitle: 'Tulis idemu',
                 color: AppColors.info,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gunakan Bottom Navigation untuk membuka Notes')),
-                  );
+                  onNavigateTab?.call(1); // Index 1 is Notes
                 },
               ),
             ),
@@ -184,9 +187,7 @@ class HomePage extends StatelessWidget {
                 subtitle: 'Alat bantu',
                 color: AppColors.success,
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gunakan Bottom Navigation untuk membuka Tools')),
-                  );
+                  onNavigateTab?.call(2); // Index 2 is Tools
                 },
               ),
             ),

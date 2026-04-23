@@ -17,11 +17,17 @@ class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
   // Daftar halaman untuk setiap tab.
-  final List<Widget> _pages = const [
-    HomePage(),
-    NotesPage(),
-    ToolsPage(),
-    ProfilePage(),
+  List<Widget> get _pages => [
+    HomePage(
+      onNavigateTab: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+      },
+    ),
+    const NotesPage(),
+    const ToolsPage(),
+    const ProfilePage(),
   ];
 
   @override

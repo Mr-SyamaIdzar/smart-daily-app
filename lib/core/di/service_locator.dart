@@ -12,6 +12,17 @@ import '../../domain/usecases/auth/logout_usecase.dart';
 import '../../domain/usecases/auth/register_usecase.dart';
 import '../../features/auth/providers/auth_provider.dart';
 
+// Notes imports
+import '../../data/datasources/local/notes_local_ds.dart';
+import '../../data/repositories/notes_repository_impl.dart';
+import '../../domain/repositories/notes_repository.dart';
+import '../../domain/usecases/notes/add_note_usecase.dart';
+import '../../domain/usecases/notes/delete_note_usecase.dart';
+import '../../domain/usecases/notes/get_notes_usecase.dart';
+import '../../domain/usecases/notes/search_notes_usecase.dart';
+import '../../domain/usecases/notes/update_note_usecase.dart';
+import '../../features/notes/providers/notes_provider.dart';
+
 /// Service locator menggunakan GetIt.
 /// Semua dependency diregistrasi di sini — satu titik kontrol untuk DI.
 ///
@@ -35,6 +46,10 @@ abstract class ServiceLocator {
     sl.registerLazySingleton<UserLocalDataSource>(
       () => UserLocalDataSource(sl<DbHelper>()),
     );
+    
+    sl.registerLazySingleton<NotesLocalDataSource>(
+      () => NotesLocalDataSourceImpl(sl<DbHelper>()),
+    );
 
     // === Repositories ===
     sl.registerLazySingleton<AuthRepository>(
@@ -42,6 +57,10 @@ abstract class ServiceLocator {
         localDataSource: sl<UserLocalDataSource>(),
         secureStorage: sl<FlutterSecureStorage>(),
       ),
+    );
+
+    sl.registerLazySingleton<NotesRepository>(
+      () => NotesRepositoryImpl(localDataSource: sl<NotesLocalDataSource>()),
     );
 
     // === Use Cases ===
@@ -55,6 +74,12 @@ abstract class ServiceLocator {
       ),
     );
 
+    sl.registerLazySingleton(() => GetNotesUseCase(sl<NotesRepository>()));
+    sl.registerLazySingleton(() => SearchNotesUseCase(sl<NotesRepository>()));
+    sl.registerLazySingleton(() => AddNoteUseCase(sl<NotesRepository>()));
+    sl.registerLazySingleton(() => UpdateNoteUseCase(sl<NotesRepository>()));
+    sl.registerLazySingleton(() => DeleteNoteUseCase(sl<NotesRepository>()));
+
     // === Providers ===
     sl.registerFactory(
       () => AuthProvider(
@@ -65,6 +90,19 @@ abstract class ServiceLocator {
         authRepository: sl<AuthRepository>(),
         biometricService: sl<BiometricService>(),
         secureStorage: sl<FlutterSecureStorage>(),
+      ),
+    );
+
+    // Register NotesProvider using factory so it gets a fresh state if needed, 
+    // or lazySingleton if you want it to live forever.
+    sl.registerLazySingleton(
+      () => NotesProvider(
+        authProvider: sl<AuthProvider>(),
+        getNotesUseCase: sl<GetNotesUseCase>(),
+        searchNotesUseCase: sl<SearchNotesUseCase>(),
+        addNoteUseCase: sl<AddNoteUseCase>(),
+        updateNoteUseCase: sl<UpdateNoteUseCase>(),
+        deleteNoteUseCase: sl<DeleteNoteUseCase>(),
       ),
     );
   }
