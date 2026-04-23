@@ -1,0 +1,65 @@
+name: tugas_akhir_app
+description: Smart Daily Assistant App — Tugas Akhir Teknologi & Pemrograman Mobile
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  provider: ^6.1.2
+
+  # Local Database
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+
+  # Biometric Authentication
+  local_auth: ^2.3.0
+
+  # HTTP Client
+  dio: ^5.7.0
+
+  # Local Notifications
+  flutter_local_notifications: ^17.2.4
+
+  # Sensors (Accelerometer & Gyroscope)
+  sensors_plus: ^4.0.2
+
+  # Image Picker (Profile Photo)
+  image_picker: ^1.1.2
+
+  # Secure Storage (session token)
+  flutter_secure_storage: ^9.2.2
+
+  # Crypto (password hashing SHA-256)
+  crypto: ^3.0.3
+
+  # Dependency Injection
+  get_it: ^8.0.2
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Shimmer loading
+  shimmer: ^3.0.0
+
+  # Lottie animations
+  lottie: ^3.1.2
+
+  # Date & number formatting
+  intl: ^0.19.0
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
