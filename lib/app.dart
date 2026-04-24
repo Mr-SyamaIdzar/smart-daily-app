@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/shake_detector_wrapper.dart';
 import 'features/auth/providers/auth_provider.dart';
 
 /// Root widget aplikasi.
@@ -19,6 +20,9 @@ class SmartDailyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: AppRouter.router(authProvider),
+      builder: (context, child) {
+        return ShakeDetectorWrapper(child: child!);
+      },
     );
   }
 }

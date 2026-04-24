@@ -3,6 +3,8 @@ import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 
 import '../../core/services/biometric_service.dart';
+import '../../core/services/shake_service.dart';
+import '../../core/services/notification_service.dart';
 import '../../data/datasources/local/db_helper.dart';
 import '../../data/datasources/local/user_local_ds.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -61,6 +63,8 @@ abstract class ServiceLocator {
 
     sl.registerLazySingleton<BiometricService>(() => BiometricService());
     sl.registerLazySingleton<LocationService>(() => LocationService());
+    sl.registerLazySingleton<ShakeService>(() => ShakeService());
+    sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
     // Registers http Client
     sl.registerLazySingleton<http.Client>(() => http.Client());

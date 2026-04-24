@@ -62,6 +62,15 @@ class ToolsPage extends StatelessWidget {
             color: Colors.redAccent,
             onTap: () => _showComingSoon(context, 'Game'),
           ),
+          _buildToolCard(
+            context,
+            title: 'Notifikasi',
+            icon: Icons.notifications_active_outlined,
+            color: Colors.orange,
+            onTap: () {
+              context.pushNamed('tools_notifications');
+            },
+          ),
         ],
       ),
     );

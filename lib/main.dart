@@ -11,6 +11,7 @@ import 'features/weather/providers/weather_provider.dart';
 import 'features/tools/providers/currency_provider.dart';
 import 'features/tools/providers/time_converter_provider.dart';
 import 'features/ai/providers/chat_provider.dart';
+import 'core/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +21,9 @@ void main() async {
 
   // Initialize dependency injection
   await ServiceLocator.init();
+  
+  // Initialize Notification Service
+  await ServiceLocator.sl<NotificationService>().init();
 
   runApp(
     MultiProvider(

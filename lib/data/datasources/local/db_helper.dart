@@ -6,7 +6,7 @@ import 'package:path/path.dart';
 /// Penggunaan: `final db = await DbHelper.instance.database;`
 class DbHelper {
   static const String _dbName = 'smart_daily.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
 
   // === Table Names ===
   static const String tableUsers = 'users';
@@ -61,7 +61,14 @@ class DbHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Tambah migrasi di sini saat versi bertambah
+    if (oldVersion < 2) {
+      try {
+        await db.execute('ALTER TABLE $tableUsers ADD COLUMN photo_path TEXT');
+      } catch (e) {
+        // Jika kolom sudah ada, abaikan error
+        print('Migration error (likely column already exists): $e');
+      }
+    }
   }
 
   Future<void> close() async {

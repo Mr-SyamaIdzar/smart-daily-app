@@ -207,6 +207,19 @@ class AuthProvider extends ChangeNotifier {
     _setUnauthenticated();
   }
 
+  /// Update foto profil user.
+  Future<void> updatePhoto(String path) async {
+    if (_currentUser == null || _currentUser!.id == null) return;
+    
+    try {
+      await _authRepository.updateProfilePhoto(_currentUser!.id!, path);
+      _currentUser = _currentUser!.copyWith(photoPath: path);
+      notifyListeners();
+    } catch (e) {
+      _setError('Gagal memperbarui foto profil: $e');
+    }
+  }
+
   /// Clear error message.
   void clearError() {
     _errorMessage = null;

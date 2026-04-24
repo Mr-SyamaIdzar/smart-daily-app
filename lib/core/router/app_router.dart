@@ -11,6 +11,9 @@ import '../../features/weather/weather_page.dart';
 import '../../features/tools/currency_converter_page.dart';
 import '../../features/tools/time_converter_page.dart';
 import '../../features/ai/chatbot_page.dart';
+import '../../features/tools/notification_test_page.dart';
+import '../../features/profile/profile_page.dart';
+import '../../features/profile/feedback_page.dart';
 
 /// Konfigurasi routing aplikasi menggunakan GoRouter.
 /// Fitur: route protection (redirect ke /login jika belum auth).
@@ -18,9 +21,13 @@ abstract class AppRouter {
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
+  
+  static final GlobalKey<NavigatorState> rootNavigatorKey = 
+      GlobalKey<NavigatorState>();
 
   static GoRouter router(AuthProvider authProvider) {
     return GoRouter(
+      navigatorKey: rootNavigatorKey,
       initialLocation: login,
       refreshListenable: authProvider,
       redirect: (context, state) {
@@ -91,6 +98,20 @@ abstract class AppRouter {
           name: 'tools_chatbot',
           pageBuilder: (context, state) => const MaterialPage(
             child: ChatbotPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/tools/notifications',
+          name: 'tools_notifications',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: NotificationTestPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/profile/feedback',
+          name: 'profile_feedback',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: FeedbackPage(),
           ),
         ),
       ],

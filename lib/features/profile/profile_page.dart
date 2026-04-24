@@ -1,12 +1,41 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_sizes.dart';
 import '../auth/providers/auth_provider.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(AuthProvider authProvider) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      
+      if (image != null) {
+        await authProvider.updatePhoto(image.path);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil gambar: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +46,7 @@ class ProfilePage extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Profil',
+          'Profil Saya',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: AppColors.surface,
@@ -25,68 +54,96 @@ class ProfilePage extends StatelessWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         child: Column(
           children: [
-            // Avatar & Info
+            const SizedBox(height: AppSizes.xl),
+            
+            // Avatar & Info section
             Center(
-              child: Column(
+              child: Stack(
                 children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: AppColors.primaryLight.withOpacity(0.15),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 48,
-                      color: AppColors.primary,
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.primary, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundColor: AppColors.surfaceVariant,
+                      backgroundImage: user?.photoPath != null 
+                          ? FileImage(File(user!.photoPath!)) 
+                          : null,
+                      child: user?.photoPath == null
+                          ? const Icon(Icons.person_rounded, size: 60, color: AppColors.textHint)
+                          : null,
                     ),
                   ),
-                  const SizedBox(height: AppSizes.md),
-                  Text(
-                    user?.fullName ?? 'Pengguna',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () => _pickImage(authProvider),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppSizes.xl),
-
-            // Settings Section
-            Align(
-              alignment: Alignment.centerLeft,
-              child: const Text(
-                'Keamanan',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
+            const SizedBox(height: AppSizes.lg),
+            Text(
+              user?.fullName ?? 'Nama Pengguna',
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: AppSizes.md),
+            Text(
+              user?.email ?? 'email@example.com',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSizes.xl * 1.5),
 
-            if (authProvider.isBiometricAvailable) ...[
-              _BiometricCard(authProvider: authProvider),
-              const SizedBox(height: AppSizes.xl),
-            ],
+            // Menu Section
+            _buildMenuCard(context, authProvider),
+            
+            const SizedBox(height: AppSizes.xl),
 
             // Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => authProvider.logout(),
-                icon: const Icon(Icons.logout_rounded),
-                label: const Text('Keluar'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.error,
-                  side: const BorderSide(color: AppColors.error),
-                  padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSizes.xl),
+              child: SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () => _showLogoutDialog(context, authProvider),
+                  icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+                  label: const Text(
+                    'Keluar dari Akun',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
                   ),
                 ),
               ),
@@ -96,133 +153,122 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
-}
 
-/// Card untuk mengaktifkan / menonaktifkan login biometrik.
-class _BiometricCard extends StatelessWidget {
-  const _BiometricCard({required this.authProvider});
-  final AuthProvider authProvider;
-
-  @override
-  Widget build(BuildContext context) {
-    final isEnabled = authProvider.isBiometricEnabled;
-
+  Widget _buildMenuCard(BuildContext context, AuthProvider authProvider) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: isEnabled
-            ? AppColors.primary.withOpacity(0.08)
-            : AppColors.surface,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(
-          color: isEnabled
-              ? AppColors.primary.withOpacity(0.3)
-              : AppColors.border.withOpacity(0.5),
-        ),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: isEnabled ? AppColors.primary : AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-            ),
-            child: Icon(
-              Icons.fingerprint_rounded,
-              color: isEnabled ? Colors.white : AppColors.textHint,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: AppSizes.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isEnabled ? 'Sidik Jari Aktif' : 'Login Sidik Jari',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color:
-                        isEnabled ? AppColors.primary : AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isEnabled
-                      ? 'Biometrik digunakan untuk login'
-                      : 'Login seketika tanpa password',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    height: 1.2,
-                  ),
-                ),
-              ],
+          _buildMenuItem(
+            icon: Icons.fingerprint_rounded,
+            title: 'Keamanan Biometrik',
+            subtitle: authProvider.isBiometricEnabled ? 'Aktif' : 'Nonaktif',
+            trailing: Switch(
+              value: authProvider.isBiometricEnabled,
+              onChanged: (val) {
+                if (val) {
+                  _onEnableBiometric(authProvider);
+                } else {
+                  _onDisableBiometric(authProvider);
+                }
+              },
+              activeColor: AppColors.primary,
             ),
           ),
-          const SizedBox(width: AppSizes.sm),
-          if (!isEnabled)
-            FilledButton(
-              onPressed: () => _onEnable(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.md,
-                ),
-                minimumSize: const Size(0, 36),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                ),
-              ),
-              child: const Text('Aktifkan',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            )
-          else
-            TextButton(
-              onPressed: () => _onDisable(context),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.error,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.sm,
-                ),
-                minimumSize: const Size(0, 36),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: const Text('Nonaktifkan',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            ),
+          const Divider(height: 1, indent: 60),
+          _buildMenuItem(
+            icon: Icons.rate_review_outlined,
+            title: 'Kesan & Pesan',
+            subtitle: 'Bagikan pengalaman Anda',
+            onTap: () => context.pushNamed('profile_feedback'),
+          ),
+          const Divider(height: 1, indent: 60),
+          _buildMenuItem(
+            icon: Icons.info_outline_rounded,
+            title: 'Tentang Aplikasi',
+            subtitle: 'Versi 1.0.0',
+            onTap: () {},
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _onEnable(BuildContext context) async {
+  Widget _buildMenuItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        ),
+        child: Icon(icon, color: AppColors.primary, size: 24),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+      ),
+      trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
+      onTap: onTap,
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Keluar'),
+        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              authProvider.logout();
+            },
+            child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _onEnableBiometric(AuthProvider authProvider) async {
     final success = await authProvider.enableBiometric();
-    if (!context.mounted) return;
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          success
-              ? '✅ Sidik jari berhasil diaktifkan!'
-              : '❌ Gagal mengaktifkan sidik jari.',
+          success ? 'Sidik jari diaktifkan' : 'Gagal mengaktifkan sidik jari',
         ),
-        backgroundColor: success ? AppColors.success : AppColors.error,
         behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  Future<void> _onDisable(BuildContext context) async {
+  Future<void> _onDisableBiometric(AuthProvider authProvider) async {
     await authProvider.disableBiometric();
-    if (!context.mounted) return;
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Login sidik jari dinonaktifkan.'),
+        content: Text('Sidik jari dinonaktifkan'),
         behavior: SnackBarBehavior.floating,
       ),
     );

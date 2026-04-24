@@ -26,4 +26,7 @@ abstract class AuthRepository {
 
   /// Mengambil data user untuk login biometrik berdasar email
   Future<UserEntity?> getBiometricUserByEmail(String email);
+
+  /// Update path foto profil user
+  Future<void> updateProfilePhoto(int userId, String photoPath);
 }

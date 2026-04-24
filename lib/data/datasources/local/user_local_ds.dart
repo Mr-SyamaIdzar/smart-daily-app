@@ -89,4 +89,15 @@ class UserLocalDataSource {
       whereArgs: [id],
     );
   }
+
+  /// Update path foto profil user.
+  Future<void> updateProfilePhoto(int id, String photoPath) async {
+    final db = await _db;
+    await db.update(
+      DbHelper.tableUsers,
+      {'photo_path': photoPath},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

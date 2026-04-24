@@ -107,4 +107,9 @@ class AuthRepositoryImpl implements AuthRepository {
     final userModel = await _localDataSource.getUserByEmail(email);
     return userModel?.toEntity();
   }
+
+  @override
+  Future<void> updateProfilePhoto(int userId, String photoPath) async {
+    await _localDataSource.updateProfilePhoto(userId, photoPath);
+  }
 }
