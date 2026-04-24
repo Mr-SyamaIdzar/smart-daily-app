@@ -33,21 +33,27 @@ class ToolsPage extends StatelessWidget {
             title: 'Chat Bot',
             icon: Icons.chat_bubble_outline,
             color: Colors.blue,
-            onTap: () => _showComingSoon(context, 'Chat Bot'),
+            onTap: () {
+              context.pushNamed('tools_chatbot');
+            },
           ),
           _buildToolCard(
             context,
             title: 'Konversi Waktu',
             icon: Icons.access_time,
             color: Colors.purple,
-            onTap: () => _showComingSoon(context, 'Konversi Waktu'),
+            onTap: () {
+              context.pushNamed('tools_time');
+            },
           ),
           _buildToolCard(
             context,
             title: 'Mata Uang',
             icon: Icons.currency_exchange,
             color: Colors.green,
-            onTap: () => _showComingSoon(context, 'Mata Uang'),
+            onTap: () {
+              context.pushNamed('tools_currency');
+            },
           ),
           _buildToolCard(
             context,

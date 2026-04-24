@@ -33,6 +33,17 @@ import '../../domain/usecases/weather/get_weather_by_city_usecase.dart';
 import '../../domain/usecases/weather/get_weather_by_location_usecase.dart';
 import '../../features/weather/providers/weather_provider.dart';
 
+// Currency imports
+import 'package:dio/dio.dart';
+import '../../data/datasources/remote/currency_api_service.dart';
+import '../../data/repositories/currency_repository.dart';
+import '../../features/tools/providers/currency_provider.dart';
+import '../../features/tools/providers/time_converter_provider.dart';
+
+// AI Chatbot imports
+import '../../features/ai/gemini_service.dart';
+import '../../features/ai/providers/chat_provider.dart';
+
 /// Service locator menggunakan GetIt.
 /// Semua dependency diregistrasi di sini — satu titik kontrol untuk DI.
 ///
@@ -53,6 +64,7 @@ abstract class ServiceLocator {
 
     // Registers http Client
     sl.registerLazySingleton<http.Client>(() => http.Client());
+    sl.registerLazySingleton<Dio>(() => Dio());
 
     // === Data Sources ===
     sl.registerLazySingleton<DbHelper>(() => DbHelper.instance);
@@ -69,6 +81,14 @@ abstract class ServiceLocator {
       () => WeatherRemoteDataSourceImpl(client: sl<http.Client>()),
     );
 
+    sl.registerLazySingleton<CurrencyApiService>(
+      () => CurrencyApiService(sl<Dio>()),
+    );
+
+    sl.registerLazySingleton<GeminiService>(
+      () => GeminiService(sl<http.Client>()),
+    );
+
     // === Repositories ===
     sl.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(
@@ -83,6 +103,10 @@ abstract class ServiceLocator {
 
     sl.registerLazySingleton<WeatherRepository>(
       () => WeatherRepositoryImpl(remoteDataSource: sl<WeatherRemoteDataSource>()),
+    );
+
+    sl.registerLazySingleton<CurrencyRepository>(
+      () => CurrencyRepository(sl<CurrencyApiService>()),
     );
 
     // === Use Cases ===
@@ -137,6 +161,18 @@ abstract class ServiceLocator {
         getWeatherByCityUseCase: sl<GetWeatherByCityUseCase>(),
         locationService: sl<LocationService>(),
       ),
+    );
+
+    sl.registerLazySingleton(
+      () => CurrencyProvider(sl<CurrencyRepository>()),
+    );
+
+    sl.registerLazySingleton(
+      () => TimeConverterProvider(),
+    );
+
+    sl.registerLazySingleton(
+      () => ChatProvider(sl<GeminiService>()),
     );
   }
 }

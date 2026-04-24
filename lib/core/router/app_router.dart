@@ -8,6 +8,9 @@ import '../../features/main/main_page.dart';
 import '../../features/notes/note_form_page.dart';
 import '../../domain/entities/note_entity.dart';
 import '../../features/weather/weather_page.dart';
+import '../../features/tools/currency_converter_page.dart';
+import '../../features/tools/time_converter_page.dart';
+import '../../features/ai/chatbot_page.dart';
 
 /// Konfigurasi routing aplikasi menggunakan GoRouter.
 /// Fitur: route protection (redirect ke /login jika belum auth).
@@ -67,6 +70,27 @@ abstract class AppRouter {
           name: 'tools_weather',
           pageBuilder: (context, state) => const MaterialPage(
             child: WeatherPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/tools/currency',
+          name: 'tools_currency',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: CurrencyConverterPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/tools/time',
+          name: 'tools_time',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: TimeConverterPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/tools/chatbot',
+          name: 'tools_chatbot',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: ChatbotPage(),
           ),
         ),
       ],
