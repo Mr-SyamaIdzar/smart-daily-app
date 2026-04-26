@@ -12,7 +12,7 @@ import '../../features/tools/currency_converter_page.dart';
 import '../../features/tools/time_converter_page.dart';
 import '../../features/ai/chatbot_page.dart';
 import '../../features/tools/notification_test_page.dart';
-import '../../features/profile/profile_page.dart';
+import '../../features/tools/daily_focus_memory_match_page.dart';
 import '../../features/profile/feedback_page.dart';
 
 /// Konfigurasi routing aplikasi menggunakan GoRouter.
@@ -105,6 +105,13 @@ abstract class AppRouter {
           name: 'tools_notifications',
           pageBuilder: (context, state) => const MaterialPage(
             child: NotificationTestPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/tools/daily-focus',
+          name: 'tools_daily_focus',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: DailyFocusMemoryMatchPage(),
           ),
         ),
         GoRoute(

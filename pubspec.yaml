@@ -1,6 +1,6 @@
 name: tugas_akhir_app
 description: Smart Daily Assistant App — Tugas Akhir Teknologi & Pemrograman Mobile
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:

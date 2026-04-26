@@ -57,10 +57,12 @@ class ToolsPage extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            title: 'Game',
+            title: 'Daily Focus',
             icon: Icons.sports_esports_outlined,
             color: Colors.redAccent,
-            onTap: () => _showComingSoon(context, 'Game'),
+            onTap: () {
+              context.pushNamed('tools_daily_focus');
+            },
           ),
           _buildToolCard(
             context,
@@ -101,7 +103,7 @@ class ToolsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSizes.md),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 36),
@@ -119,15 +121,6 @@ class ToolsPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Fitur $feature akan segera hadir!'),
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }
