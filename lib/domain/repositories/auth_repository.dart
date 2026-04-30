@@ -29,4 +29,7 @@ abstract class AuthRepository {
 
   /// Update path foto profil user
   Future<void> updateProfilePhoto(int userId, String photoPath);
+
+  /// Update nama lengkap (username) user
+  Future<void> updateUsername(int userId, String fullName);
 }

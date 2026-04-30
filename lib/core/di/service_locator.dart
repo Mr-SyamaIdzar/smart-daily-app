@@ -43,7 +43,7 @@ import '../../features/tools/providers/currency_provider.dart';
 import '../../features/tools/providers/time_converter_provider.dart';
 
 // AI Chatbot imports
-import '../../features/ai/gemini_service.dart';
+import '../../features/ai/ollama_service.dart';
 import '../../features/ai/providers/chat_provider.dart';
 
 /// Service locator menggunakan GetIt.
@@ -89,8 +89,8 @@ abstract class ServiceLocator {
       () => CurrencyApiService(sl<Dio>()),
     );
 
-    sl.registerLazySingleton<GeminiService>(
-      () => GeminiService(sl<http.Client>()),
+    sl.registerLazySingleton<OllamaService>(
+      () => OllamaService(sl<http.Client>()),
     );
 
     // === Repositories ===
@@ -176,7 +176,7 @@ abstract class ServiceLocator {
     );
 
     sl.registerLazySingleton(
-      () => ChatProvider(sl<GeminiService>()),
+      () => ChatProvider(sl<OllamaService>()),
     );
   }
 }

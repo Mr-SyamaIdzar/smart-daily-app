@@ -220,6 +220,23 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Update nama lengkap (username) user.
+  Future<bool> updateUsername(String newName) async {
+    if (_currentUser == null || _currentUser!.id == null) return false;
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty) return false;
+
+    try {
+      await _authRepository.updateUsername(_currentUser!.id!, trimmed);
+      _currentUser = _currentUser!.copyWith(fullName: trimmed);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _setError('Gagal memperbarui nama: $e');
+      return false;
+    }
+  }
+
   /// Clear error message.
   void clearError() {
     _errorMessage = null;

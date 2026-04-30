@@ -100,4 +100,15 @@ class UserLocalDataSource {
       whereArgs: [id],
     );
   }
+
+  /// Update nama lengkap (username) user.
+  Future<void> updateUsername(int id, String fullName) async {
+    final db = await _db;
+    await db.update(
+      DbHelper.tableUsers,
+      {'full_name': fullName},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }

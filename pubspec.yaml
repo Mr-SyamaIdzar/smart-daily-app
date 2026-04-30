@@ -62,6 +62,8 @@ dependencies:
   timezone: ^0.9.4
   flutter_timezone: ^5.0.2
 
+  gif: ^2.2.0   # package khusus untuk GIF animasi
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -71,4 +73,5 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/images/supikip-cuayo.gif
     - .env

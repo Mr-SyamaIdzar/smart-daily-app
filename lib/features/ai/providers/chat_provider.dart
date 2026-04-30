@@ -1,60 +1,78 @@
 import 'package:flutter/material.dart';
-import '../gemini_service.dart';
+import '../ollama_service.dart';
 import '../chat_model.dart';
 
 class ChatProvider with ChangeNotifier {
-  final GeminiService _geminiService;
+  final OllamaService _ollamaService;
 
-  ChatProvider(this._geminiService);
+  ChatProvider(this._ollamaService);
 
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
   bool _isCooldown = false;
+  bool _isStreaming = false;
+  String _currentModel = OllamaService.defaultModel;
+  String _streamingText = '';
 
   List<ChatMessage> get messages => _messages;
   bool get isLoading => _isLoading;
   bool get isCooldown => _isCooldown;
+  bool get isStreaming => _isStreaming;
+  String get currentModel => _currentModel;
+  String get streamingText => _streamingText;
+
+  List<OllamaModel> get availableModels => OllamaService.availableModels;
+
+  void setModel(String modelName) {
+    _currentModel = modelName;
+    notifyListeners();
+  }
 
   Future<void> sendMessage(String text) async {
     if (text.trim().isEmpty || _isLoading || _isCooldown) return;
 
-    // Add user message
+    // Tambah pesan user
     _messages.add(ChatMessage(text: text, role: MessageRole.user));
     _isLoading = true;
+    _isStreaming = false;
+    _streamingText = '';
     notifyListeners();
 
     try {
-      final response = await _geminiService.sendMessage(text);
-      _messages.add(ChatMessage(text: response, role: MessageRole.model));
+      // Gunakan streaming
+      _isStreaming = true;
+      final buffer = StringBuffer();
 
-      // Cek jika response adalah 429 (Batas request tercapai)
-      if (response.contains('Batas request AI tercapai')) {
-        _triggerCooldown();
+      await for (final chunk in _ollamaService.streamMessage(
+        text,
+        model: _currentModel,
+      )) {
+        buffer.write(chunk);
+        _streamingText = buffer.toString();
+        notifyListeners();
       }
+
+      final finalText = buffer.toString().trim();
+      _messages.add(ChatMessage(
+        text: finalText.isEmpty ? 'Maaf, tidak ada respons dari server.' : finalText,
+        role: MessageRole.model,
+      ));
     } catch (e) {
       _messages.add(ChatMessage(
-        text: "Maaf, terjadi masalah koneksi. Silakan coba lagi.",
+        text: 'Maaf, terjadi masalah koneksi. Silakan coba lagi.',
         role: MessageRole.model,
       ));
     } finally {
       _isLoading = false;
+      _isStreaming = false;
+      _streamingText = '';
       notifyListeners();
     }
   }
 
-  void _triggerCooldown() async {
-    _isCooldown = true;
-    notifyListeners();
-    
-    // Tunggu 10 detik sebelum mengaktifkan kembali
-    await Future.delayed(const Duration(seconds: 10));
-    
-    _isCooldown = false;
-    notifyListeners();
-  }
-
   void clearChat() {
     _messages.clear();
+    _streamingText = '';
     notifyListeners();
   }
 }

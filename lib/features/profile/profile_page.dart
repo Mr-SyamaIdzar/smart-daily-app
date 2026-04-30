@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_sizes.dart';
 import '../auth/providers/auth_provider.dart';
+import 'about_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,13 +19,14 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final ImagePicker _picker = ImagePicker();
 
+  // ─── Foto profil ────────────────────────────────────────────────────────────
+
   Future<void> _pickImage(AuthProvider authProvider) async {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 70,
       );
-      
       if (image != null) {
         await authProvider.updatePhoto(image.path);
       }
@@ -36,6 +38,102 @@ class _ProfilePageState extends State<ProfilePage> {
       }
     }
   }
+
+  // ─── Edit Username ───────────────────────────────────────────────────────────
+
+  void _showEditUsernameDialog(AuthProvider authProvider) {
+    final controller =
+        TextEditingController(text: authProvider.currentUser?.fullName ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        ),
+        backgroundColor: AppColors.surface,
+        title: const Text(
+          'Ubah Nama',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              labelText: 'Nama Lengkap',
+              prefixIcon: const Icon(Icons.person_outline_rounded),
+              filled: true,
+              fillColor: AppColors.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+            ),
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return 'Nama tidak boleh kosong';
+              }
+              if (val.trim().length < 2) {
+                return 'Nama minimal 2 karakter';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              ),
+            ),
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.pop(dialogCtx);
+
+              final success =
+                  await authProvider.updateUsername(controller.text);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Nama berhasil diperbarui ✓'
+                          : 'Gagal memperbarui nama',
+                    ),
+                    backgroundColor:
+                        success ? AppColors.success : AppColors.error,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +156,8 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           children: [
             const SizedBox(height: AppSizes.xl),
-            
-            // Avatar & Info section
+
+            // ── Avatar ──────────────────────────────────────────────────
             Center(
               child: Stack(
                 children: [
@@ -78,11 +176,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: CircleAvatar(
                       radius: 60,
                       backgroundColor: AppColors.surfaceVariant,
-                      backgroundImage: user?.photoPath != null 
-                          ? FileImage(File(user!.photoPath!)) 
+                      backgroundImage: user?.photoPath != null
+                          ? FileImage(File(user!.photoPath!))
                           : null,
                       child: user?.photoPath == null
-                          ? const Icon(Icons.person_rounded, size: 60, color: AppColors.textHint)
+                          ? const Icon(Icons.person_rounded,
+                              size: 60, color: AppColors.textHint)
                           : null,
                     ),
                   ),
@@ -97,7 +196,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+                        child: const Icon(Icons.camera_alt_rounded,
+                            color: Colors.white, size: 20),
                       ),
                     ),
                   ),
@@ -105,14 +205,41 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
             const SizedBox(height: AppSizes.lg),
-            Text(
-              user?.fullName ?? 'Nama Pengguna',
-              style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+
+            // ── Nama + tombol edit ──────────────────────────────────────
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Text(
+                    user?.fullName ?? 'Nama Pengguna',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => _showEditUsernameDialog(authProvider),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.edit_rounded,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 4),
             Text(
               user?.email ?? 'email@example.com',
               style: const TextStyle(
@@ -122,19 +249,19 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: AppSizes.xl * 1.5),
 
-            // Menu Section
+            // ── Menu card ────────────────────────────────────────────────
             _buildMenuCard(context, authProvider),
-            
             const SizedBox(height: AppSizes.xl),
 
-            // Logout Button
+            // ── Logout ───────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.only(bottom: AppSizes.xl),
               child: SizedBox(
                 width: double.infinity,
                 child: TextButton.icon(
                   onPressed: () => _showLogoutDialog(context, authProvider),
-                  icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+                  icon: const Icon(Icons.logout_rounded,
+                      color: AppColors.error),
                   label: const Text(
                     'Keluar dari Akun',
                     style: TextStyle(
@@ -143,7 +270,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSizes.md),
                   ),
                 ),
               ),
@@ -153,6 +281,8 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+
+  // ─── Menu card ───────────────────────────────────────────────────────────────
 
   Widget _buildMenuCard(BuildContext context, AuthProvider authProvider) {
     return Container(
@@ -164,9 +294,17 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         children: [
           _buildMenuItem(
+            icon: Icons.person_outline_rounded,
+            title: 'Ubah Nama',
+            subtitle: 'Perbarui nama profil Anda',
+            onTap: () => _showEditUsernameDialog(authProvider),
+          ),
+          const Divider(height: 1, indent: 60),
+          _buildMenuItem(
             icon: Icons.fingerprint_rounded,
             title: 'Keamanan Biometrik',
-            subtitle: authProvider.isBiometricEnabled ? 'Aktif' : 'Nonaktif',
+            subtitle:
+                authProvider.isBiometricEnabled ? 'Aktif' : 'Nonaktif',
             trailing: Switch(
               value: authProvider.isBiometricEnabled,
               onChanged: (val) {
@@ -191,7 +329,10 @@ class _ProfilePageState extends State<ProfilePage> {
             icon: Icons.info_outline_rounded,
             title: 'Tentang Aplikasi',
             subtitle: 'Versi 1.0.0',
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AboutPage()),
+            ),
           ),
         ],
       ),
@@ -216,34 +357,43 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+        style:
+            const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
       ),
       subtitle: Text(
         subtitle,
-        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+        style: const TextStyle(
+            fontSize: 12, color: AppColors.textSecondary),
       ),
-      trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: AppColors.textHint),
+      trailing: trailing ??
+          const Icon(Icons.chevron_right_rounded,
+              color: AppColors.textHint),
       onTap: onTap,
     );
   }
 
-  void _showLogoutDialog(BuildContext context, AuthProvider authProvider) {
+  // ─── Dialogs & actions ───────────────────────────────────────────────────────
+
+  void _showLogoutDialog(
+      BuildContext context, AuthProvider authProvider) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Keluar'),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
+        content: const Text(
+            'Apakah Anda yakin ingin keluar dari aplikasi?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Batal'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               authProvider.logout();
             },
-            child: const Text('Keluar', style: TextStyle(color: AppColors.error)),
+            child: const Text('Keluar',
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -256,7 +406,9 @@ class _ProfilePageState extends State<ProfilePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          success ? 'Sidik jari diaktifkan' : 'Gagal mengaktifkan sidik jari',
+          success
+              ? 'Sidik jari diaktifkan'
+              : 'Gagal mengaktifkan sidik jari',
         ),
         behavior: SnackBarBehavior.floating,
       ),
