@@ -66,7 +66,16 @@ class ToolsPage extends StatelessWidget {
           ),
           _buildToolCard(
             context,
-            title: 'Notifikasi',
+            title: 'Reminder',
+            icon: Icons.add_alarm_rounded,
+            color: AppColors.primary,
+            onTap: () {
+              context.pushNamed('reminders');
+            },
+          ),
+          _buildToolCard(
+            context,
+            title: 'Test Notif',
             icon: Icons.notifications_active_outlined,
             color: Colors.orange,
             onTap: () {

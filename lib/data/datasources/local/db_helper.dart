@@ -6,11 +6,12 @@ import 'package:path/path.dart';
 /// Penggunaan: `final db = await DbHelper.instance.database;`
 class DbHelper {
   static const String _dbName = 'smart_daily.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
 
   // === Table Names ===
   static const String tableUsers = 'users';
   static const String tableNotes = 'notes';
+  static const String tableReminders = 'reminders';
 
   DbHelper._private();
   static final DbHelper instance = DbHelper._private();
@@ -58,6 +59,18 @@ class DbHelper {
         FOREIGN KEY (user_id) REFERENCES $tableUsers(id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE $tableReminders (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     INTEGER NOT NULL,
+        title       TEXT NOT NULL,
+        description TEXT NOT NULL,
+        datetime    TEXT NOT NULL,
+        is_active   INTEGER NOT NULL DEFAULT 1,
+        FOREIGN KEY (user_id) REFERENCES $tableUsers(id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -66,7 +79,26 @@ class DbHelper {
         await db.execute('ALTER TABLE $tableUsers ADD COLUMN photo_path TEXT');
       } catch (e) {
         // Jika kolom sudah ada, abaikan error
-        print('Migration error (likely column already exists): $e');
+        print('Migration v1→v2 error (likely column already exists): $e');
+      }
+    }
+
+    if (oldVersion < 3) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS $tableReminders (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            title       TEXT NOT NULL,
+            description TEXT NOT NULL,
+            datetime    TEXT NOT NULL,
+            is_active   INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES $tableUsers(id) ON DELETE CASCADE
+          )
+        ''');
+        print('Migration v2→v3: tabel reminders berhasil dibuat.');
+      } catch (e) {
+        print('Migration v2→v3 error: $e');
       }
     }
   }

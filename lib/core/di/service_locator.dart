@@ -46,6 +46,16 @@ import '../../features/tools/providers/time_converter_provider.dart';
 import '../../features/ai/ollama_service.dart';
 import '../../features/ai/providers/chat_provider.dart';
 
+// Reminder imports
+import '../../data/datasources/local/reminder_local_ds.dart';
+import '../../data/repositories/reminder_repository_impl.dart';
+import '../../domain/repositories/reminder_repository.dart';
+import '../../domain/usecases/reminders/add_reminder_usecase.dart';
+import '../../domain/usecases/reminders/delete_reminder_usecase.dart';
+import '../../domain/usecases/reminders/get_reminders_usecase.dart';
+import '../../domain/usecases/reminders/update_reminder_usecase.dart';
+import '../../features/reminders/providers/reminder_provider.dart';
+
 /// Service locator menggunakan GetIt.
 /// Semua dependency diregistrasi di sini — satu titik kontrol untuk DI.
 ///
@@ -81,6 +91,10 @@ abstract class ServiceLocator {
       () => NotesLocalDataSourceImpl(sl<DbHelper>()),
     );
 
+    sl.registerLazySingleton<ReminderLocalDataSource>(
+      () => ReminderLocalDataSourceImpl(sl<DbHelper>()),
+    );
+
     sl.registerLazySingleton<WeatherRemoteDataSource>(
       () => WeatherRemoteDataSourceImpl(client: sl<http.Client>()),
     );
@@ -113,6 +127,10 @@ abstract class ServiceLocator {
       () => CurrencyRepository(sl<CurrencyApiService>()),
     );
 
+    sl.registerLazySingleton<ReminderRepository>(
+      () => ReminderRepositoryImpl(localDataSource: sl<ReminderLocalDataSource>()),
+    );
+
     // === Use Cases ===
     sl.registerLazySingleton(() => LoginUseCase(sl<AuthRepository>()));
     sl.registerLazySingleton(() => RegisterUseCase(sl<AuthRepository>()));
@@ -132,6 +150,12 @@ abstract class ServiceLocator {
 
     sl.registerLazySingleton(() => GetWeatherByCityUseCase(sl<WeatherRepository>()));
     sl.registerLazySingleton(() => GetWeatherByLocationUseCase(sl<WeatherRepository>()));
+
+    // Reminder use cases
+    sl.registerLazySingleton(() => GetRemindersUseCase(sl<ReminderRepository>()));
+    sl.registerLazySingleton(() => AddReminderUseCase(sl<ReminderRepository>()));
+    sl.registerLazySingleton(() => UpdateReminderUseCase(sl<ReminderRepository>()));
+    sl.registerLazySingleton(() => DeleteReminderUseCase(sl<ReminderRepository>()));
 
     // === Providers ===
     sl.registerFactory(
@@ -177,6 +201,17 @@ abstract class ServiceLocator {
 
     sl.registerLazySingleton(
       () => ChatProvider(sl<OllamaService>()),
+    );
+
+    // Reminder Provider
+    sl.registerLazySingleton(
+      () => ReminderProvider(
+        getRemindersUseCase: sl<GetRemindersUseCase>(),
+        addReminderUseCase: sl<AddReminderUseCase>(),
+        updateReminderUseCase: sl<UpdateReminderUseCase>(),
+        deleteReminderUseCase: sl<DeleteReminderUseCase>(),
+        notificationService: sl<NotificationService>(),
+      ),
     );
   }
 }

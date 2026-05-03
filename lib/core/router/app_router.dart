@@ -14,6 +14,8 @@ import '../../features/ai/chatbot_page.dart';
 import '../../features/tools/notification_test_page.dart';
 import '../../features/tools/daily_focus_memory_match_page.dart';
 import '../../features/profile/feedback_page.dart';
+import '../../features/reminders/reminder_list_page.dart';
+import '../../features/reminders/reminder_form_page.dart';
 
 /// Konfigurasi routing aplikasi menggunakan GoRouter.
 /// Fitur: route protection (redirect ke /login jika belum auth).
@@ -119,6 +121,20 @@ abstract class AppRouter {
           name: 'profile_feedback',
           pageBuilder: (context, state) => const MaterialPage(
             child: FeedbackPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/reminders',
+          name: 'reminders',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: ReminderListPage(),
+          ),
+        ),
+        GoRoute(
+          path: '/reminders/form',
+          name: 'reminder_form',
+          pageBuilder: (context, state) => const MaterialPage(
+            child: ReminderFormPage(),
           ),
         ),
       ],
