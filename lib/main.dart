@@ -14,6 +14,7 @@ import 'features/tools/providers/time_converter_provider.dart';
 import 'features/ai/providers/chat_provider.dart';
 import 'core/services/notification_service.dart';
 import 'features/reminders/providers/reminder_provider.dart';
+import 'features/profile/providers/feedback_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ServiceLocator.sl<TimeConverterProvider>()),
         ChangeNotifierProvider(create: (_) => ServiceLocator.sl<ChatProvider>()),
         ChangeNotifierProvider(create: (_) => ServiceLocator.sl<ReminderProvider>()),
+        ChangeNotifierProvider(create: (_) => ServiceLocator.sl<FeedbackProvider>()),
       ],
       child: const SmartDailyApp(),
     ),

@@ -32,12 +32,14 @@ class NotesRepositoryImpl implements NotesRepository {
     // Inject dummy if empty (to satisfy user's request)
     await localDataSource.insertDummyDataIfNeeded(userId);
     
-    return await localDataSource.getNotes(userId);
+    final models = await localDataSource.getNotes(userId);
+    return List<NoteEntity>.from(models);
   }
 
   @override
   Future<List<NoteEntity>> searchNotes(int userId, String query) async {
-    return await localDataSource.searchNotes(userId, query);
+    final models = await localDataSource.searchNotes(userId, query);
+    return List<NoteEntity>.from(models);
   }
 
   @override

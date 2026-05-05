@@ -17,7 +17,7 @@ class ShakeService {
   DateTime? _lastShakeTime;
 
   ShakeService({
-    this.threshold = 12.0,
+    this.threshold = 25.0,
     this.cooldown = const Duration(seconds: 1),
   });
 

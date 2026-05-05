@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'models/smart_note_result.dart';
 /// Model data untuk satu server Ollama publik.
 class OllamaServer {
   final String url;
@@ -180,11 +181,81 @@ class OllamaService {
 
   /// Membangun prompt dengan system instruction dalam bahasa Indonesia.
   String _buildPrompt(String userMessage) {
-    return '''Kamu adalah asisten AI dalam aplikasi Smart Daily Assistant. Kamu membantu pengguna menggunakan fitur-fitur aplikasi seperti: Notes/Catatan, Cuaca, Konversi Waktu, Konversi Mata Uang, Notifikasi, Daily Focus (Memory Match game), dan Profil. Jawab dalam bahasa Indonesia yang ramah dan singkat.
+    return '''Kamu adalah asisten AI eksklusif dalam aplikasi Smart Daily Assistant. Tugasmu HANYA membantu pengguna menggunakan fitur aplikasi: Notes/Catatan, Cuaca, Konversi Waktu, Konversi Mata Uang, Notifikasi, Daily Focus (Memory Match game), dan Profil.
+JANGAN menjawab atau merespons pertanyaan di luar konteks aplikasi atau topik-topik di atas. Jika ditanya hal lain, katakan "Maaf, aku hanya bisa membantu terkait fitur-fitur Smart Daily Assistant."
+Jawab dalam bahasa Indonesia yang ramah dan singkat.
 
 Pengguna: $userMessage
 
 Asisten:''';
+  }
+
+  /// Membangun prompt khusus untuk fitur Smart Note Assistant.
+  String _buildSmartNotePrompt(String noteContent) {
+    return '''Kamu adalah asisten AI yang membantu pengguna memahami catatan mereka.
+Tugas kamu:
+1. Buat ringkasan singkat dari catatan
+2. Ambil poin-poin penting secara dinamis (jangan dibatasi jumlahnya)
+3. Berikan saran tindakan secara dinamis jika ada
+
+Aturan:
+* Gunakan Bahasa Indonesia
+* Jawaban maksimal 5 kalimat untuk ringkasan
+* WAJIB gunakan format persis seperti di bawah ini:
+
+Ringkasan:
+(isi ringkasan di sini)
+
+Poin Penting:
+* (poin penting 1)
+* (poin penting 2)
+* ... (dan seterusnya, dinamis menyesuaikan isi catatan)
+
+Saran:
+* (saran tindakan 1)
+* (saran tindakan 2)
+* ... (dan seterusnya, dinamis menyesuaikan isi catatan)
+
+Jika catatan kosong atau tidak jelas, jawab dengan sopan bahwa kamu tidak bisa menemukan informasi penting.
+
+Catatan Pengguna:
+"""
+$noteContent
+"""''';
+  }
+
+  /// Menganalisis konten catatan dan mengembalikan objek terstruktur.
+  Future<SmartNoteResult> analyzeNote(String noteContent) async {
+    try {
+      final ollamaModel = _findModel(defaultModel) ?? availableModels.first;
+      final servers = List<OllamaServer>.from(ollamaModel.servers)
+        ..sort((a, b) => b.tokensPerSecond.compareTo(a.tokensPerSecond));
+
+      String? responseText;
+
+      for (final server in servers) {
+        try {
+          responseText = await _callServer(
+            serverUrl: server.url,
+            model: defaultModel,
+            prompt: _buildSmartNotePrompt(noteContent),
+          );
+          if (responseText.isNotEmpty) break;
+        } catch (_) {
+          continue; // Coba server berikutnya
+        }
+      }
+
+      if (responseText == null || responseText.isEmpty) {
+        return SmartNoteResult.error('Gagal menghubungi server AI. Silakan coba lagi nanti.');
+      }
+
+      return SmartNoteResult.parse(responseText);
+    } on TimeoutException {
+      return SmartNoteResult.error('Waktu permintaan habis (timeout). Periksa koneksi internet Anda.');
+    } catch (e) {
+      return SmartNoteResult.error('Terjadi kesalahan yang tidak terduga: \$e');
+    }
   }
 
   /// Panggil Ollama REST API (non-streaming).

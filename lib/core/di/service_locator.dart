@@ -56,6 +56,10 @@ import '../../domain/usecases/reminders/get_reminders_usecase.dart';
 import '../../domain/usecases/reminders/update_reminder_usecase.dart';
 import '../../features/reminders/providers/reminder_provider.dart';
 
+// Feedback imports
+import '../../data/datasources/local/feedback_local_ds.dart';
+import '../../features/profile/providers/feedback_provider.dart';
+
 /// Service locator menggunakan GetIt.
 /// Semua dependency diregistrasi di sini — satu titik kontrol untuk DI.
 ///
@@ -93,6 +97,10 @@ abstract class ServiceLocator {
 
     sl.registerLazySingleton<ReminderLocalDataSource>(
       () => ReminderLocalDataSourceImpl(sl<DbHelper>()),
+    );
+
+    sl.registerLazySingleton<FeedbackLocalDataSource>(
+      () => FeedbackLocalDataSourceImpl(sl<DbHelper>()),
     );
 
     sl.registerLazySingleton<WeatherRemoteDataSource>(
@@ -211,6 +219,13 @@ abstract class ServiceLocator {
         updateReminderUseCase: sl<UpdateReminderUseCase>(),
         deleteReminderUseCase: sl<DeleteReminderUseCase>(),
         notificationService: sl<NotificationService>(),
+      ),
+    );
+
+    // Feedback Provider
+    sl.registerLazySingleton(
+      () => FeedbackProvider(
+        localDataSource: sl<FeedbackLocalDataSource>(),
       ),
     );
   }

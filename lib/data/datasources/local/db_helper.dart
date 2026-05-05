@@ -6,12 +6,13 @@ import 'package:path/path.dart';
 /// Penggunaan: `final db = await DbHelper.instance.database;`
 class DbHelper {
   static const String _dbName = 'smart_daily.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   // === Table Names ===
   static const String tableUsers = 'users';
   static const String tableNotes = 'notes';
   static const String tableReminders = 'reminders';
+  static const String tableFeedbacks = 'feedbacks';
 
   DbHelper._private();
   static final DbHelper instance = DbHelper._private();
@@ -71,6 +72,15 @@ class DbHelper {
         FOREIGN KEY (user_id) REFERENCES $tableUsers(id) ON DELETE CASCADE
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE $tableFeedbacks (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        kesan      TEXT NOT NULL,
+        pesan      TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -99,6 +109,22 @@ class DbHelper {
         print('Migration v2→v3: tabel reminders berhasil dibuat.');
       } catch (e) {
         print('Migration v2→v3 error: $e');
+      }
+    }
+
+    if (oldVersion < 4) {
+      try {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS $tableFeedbacks (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            kesan      TEXT NOT NULL,
+            pesan      TEXT NOT NULL,
+            created_at TEXT NOT NULL
+          )
+        ''');
+        print('Migration v3→v4: tabel feedbacks berhasil dibuat.');
+      } catch (e) {
+        print('Migration v3→v4 error: $e');
       }
     }
   }
